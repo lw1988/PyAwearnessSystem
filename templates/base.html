@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <title>态势感知 Demo</title>
+    <script src="static/echarts/echarts.min.js"></script>
+    <script src="static/echarts/world.js"></script>
+    <script src="static/js/jquery-3.4.0.min.js"></script>
+    <link rel="stylesheet" href="static/css/scb.css" type="text/css" />
+</head>
+
+<body style="background-color: #1b1f23">
+<div style="position:relative;width: 100%; height: 100%">
+    <!-- 访问来源统计 -->
+    <div id="request"
+         style="position: absolute; width: 16%; height: 40vh; margin-left: 4vh; margin-top: 10vh;  z-index: 10; ">
+        {{ request_chart | safe }}
+    </div>
+    <!-- 留空 -->
+    <div style="position: absolute; width: 35%; height: 10vh; margin-left: 15%;  ">
+
+    </div>
+    <!-- 留空 -->
+    <div style="position: absolute; width: 35%; height: 10vh; margin-left: 50%;  ">
+
+    </div>
+    <!-- 展示服务状态 -->
+    <div id="service"
+         style="position: absolute; width: 15%; height: 35vh; margin-left: 83%; z-index: 10; margin-top: 10vh; ">
+        {{ service_chart | safe }}
+    </div>
+    <div style="position: absolute; width: 10%; height: 20vh; margin-left: 84%; z-index: 10; margin-top: 20vh; ">
+        <table style="width: auto; height: 100%;color: #6cb7c9; font-size: 14px; font-family: monospace; "
+               align="left">
+            <tr>
+                <td>Apache</td>
+            </tr>
+            <tr>
+                <td>MySQL</td>
+            </tr>
+            <tr>
+                <td>SSH</td>
+            </tr>
+            <tr>
+                <td>FTP</td>
+            </tr>
+        </table>
+
+    </div>
+</div>
+
+<div style="position:relative;width: 100%; height: 100%; overflow: visible;">
+    <!-- 展示恶意请求 -->
+    <div id="attack"
+         style="position: absolute; width: 25%; height: 30vh; margin-left: 4vh; margin-top: 47vh;  z-index: 10; ">
+        {{ evillink_chart | safe }}
+    </div>
+    <div id="attack_show" class="test test-1 scrollbar" style="position: absolute; width: 25%; height: 16vh; margin-left: 7vh; margin-top: 55vh;  z-index: 10; overflow: scroll; overflow-x: hidden;">
+        <table style="width: 100%; border: none; text-align: left; color: #60b0c0;font-size: 14px;  table-layout: fixed; font-family: monospace;"
+               cellpadding="0" cellspacing="0">
+            <thead>
+                <th style="width: 40%">IP</th>
+                <th style="width: 40%">目标</th>
+                <th style="width: 20%">类型</th>
+            </thead>
+            <tbody id="atk">
+            </tbody>
+        </table>
+    </div>
+    <!-- 展示世界地图 -->
+    <div id="world" style="position: absolute; width: 80%; height: 85vh; margin-left: 10%; margin-top: 5vh; ">
+        {{ world_chart | safe }}
+    </div>
+    <!-- 展示攻击监测 -->
+    <div id="link"
+         style="position: absolute; width: 20%; height: 35vh; margin-left: 80%; margin-top: 45vh; z-index: 10; overflow: visible;">
+        {{ attack_chart | safe }}
+    </div>
+
+</div>
+
+<div style="position:relative;width: 100%; height: 100%">
+    <!-- 展示进出口流量 -->
+    <div id="stream"
+         style="position: absolute; width: 96%; height: 20vh; margin-left: 4vh; margin-top: 75vh; z-index: 10;  ">
+        {{ stream_chart | safe }}
+    </div>
+</div>
+</body>
+
+<script type="text/javascript">
+    // 定位 echart
+    var world_chart_status = echarts.init(document.getElementById('{{ world_id }}'));
+    var request_chart_status = echarts.init(document.getElementById('{{ request_id }}'));
+    var attack_chart_status = echarts.init(document.getElementById('{{ attack_id }}'));
+    var stream_chart_status = echarts.init(document.getElementById('{{ stream_id }}'));
+    var service_chart_status = echarts.init(document.getElementById('{{ service_id }}'));
+    var evillinnk_chart_status = document.getElementById('atk');
+    var new_option = {};
+    world_chart_reload = function () {
+        $.ajax({
+            type: "post",
+            async: true,                   //异步请求（同步请求将会锁住浏览器，用户其他操作必须等待请求完成才可以执行）
+            url: "/chart_reload",      //请求地址
+            data: {},
+            dataType: "json",              //返回数据形式为json
+            success: function (result) {
+                //请求成功时执行该函数内容，result即为服务器返回的json对象
+                if (result) {
+                    new_option = result;
+
+                    world_chart_status.setOption(new_option);
+                    world_chart_status.hideLoading();
+                }
+            },
+            error: function (errorMsg) {
+                // 失败时的处理
+                // console.log(errorMsg);
+            }
+        })
+    };
+
+    request_chart_reload = function () {
+        $.ajax({
+            type: "post",
+            async: true,                   //异步请求（同步请求将会锁住浏览器，用户其他操作必须等待请求完成才可以执行）
+            url: "/request_reload",      //请求地址
+            data: {},
+            dataType: "json",              //返回数据形式为json
+            success: function (result) {
+                //请求成功时执行该函数内容，result即为服务器返回的json对象
+                if (result) {
+                    new_option = result;
+
+                    request_chart_status.setOption(new_option);
+                    request_chart_status.hideLoading();
+                }
+            },
+            error: function (errorMsg) {
+                // 失败时的处理
+                // console.log(errorMsg);
+            }
+        })
+    };
+
+    attack_chart_reload = function () {
+        $.ajax({
+            type: "post",
+            async: true,                   //异步请求（同步请求将会锁住浏览器，用户其他操作必须等待请求完成才可以执行）
+            url: "/attack_reload",      //请求地址
+            data: {},
+            dataType: "json",              //返回数据形式为json
+            success: function (result) {
+                //请求成功时执行该函数内容，result即为服务器返回的json对象
+                if (result) {
+                    new_option = result;
+
+                    attack_chart_status.setOption(new_option);
+                    attack_chart_status.hideLoading();
+                }
+            },
+            error: function (errorMsg) {
+                // 失败时的处理
+                // console.log(errorMsg);
+            }
+        })
+    };
+
+    stream_chart_reload = function () {
+        $.ajax({
+            type: "post",
+            async: true,                   //异步请求（同步请求将会锁住浏览器，用户其他操作必须等待请求完成才可以执行）
+            url: "/stream_reload",      //请求地址
+            data: {},
+            dataType: "json",              //返回数据形式为json
+            success: function (result) {
+                //请求成功时执行该函数内容，result即为服务器返回的json对象
+                if (result) {
+                    new_option = result;
+
+                    stream_chart_status.setOption(new_option);
+                    stream_chart_status.hideLoading();
+                }
+            },
+            error: function (errorMsg) {
+                // 失败时的处理
+                // console.log(errorMsg);
+            }
+        })
+    };
+
+    service_chart_reload = function () {
+        $.ajax({
+            type: "post",
+            async: true,                   //异步请求（同步请求将会锁住浏览器，用户其他操作必须等待请求完成才可以执行）
+            url: "/service_reload",      //请求地址
+            data: {},
+            dataType: "json",              //返回数据形式为json
+            success: function (result) {
+                //请求成功时执行该函数内容，result即为服务器返回的json对象
+                if (result) {
+                    new_option = result;
+
+                    service_chart_status.setOption(new_option);
+                    service_chart_status.hideLoading();
+                }
+            },
+            error: function (errorMsg) {
+                // 失败时的处理
+                // console.log(errorMsg);
+            }
+        })
+    };
+
+    evillink_chart_reload = function () {
+        $.ajax({
+            type: "post",
+            async: true,                   //异步请求（同步请求将会锁住浏览器，用户其他操作必须等待请求完成才可以执行）
+            url: "/evil_reload",      //请求地址
+            data: {},
+            dataType: "json",              //返回数据形式为json
+            success: function (result) {
+                //请求成功时执行该函数内容，result即为服务器返回的json对象
+                if (result){
+                    console.log(jQuery.isEmptyObject(result));
+                    if (jQuery.isEmptyObject(result)){
+                        return
+                    }
+                    for(var i in result){
+                        var ele = document.getElementById("atk").insertRow(0);
+                        var ip = ele.insertCell(0);
+                        var file = ele.insertCell(1);
+                        var type = ele.insertCell(2);
+
+                        ip.innerHTML = result[i][0];
+                        file.innerHTML = result[i][1];
+                        type.innerHTML = result[i][2];
+                    }
+                }
+            },
+            error: function (errorMsg) {
+                // 失败时的处理
+                // console.log(errorMsg);
+            }
+        })
+    };
+
+    // 4s刷新一次访问特效
+    setInterval(world_chart_reload, 4000);
+    // 4s确认一次访问来源统计
+    setInterval(request_chart_reload, 4000);
+    // 一分钟确认一次攻击统计
+    setInterval(attack_chart_reload, 4000);
+    // 一小时确认一次进出口流量统计
+    setInterval(stream_chart_reload, 4000);
+    // 一分钟确认一次服务状态
+    setInterval(service_chart_reload, 4000);
+    // 一分钟获取一次恶意连接记录
+    setInterval(evillink_chart_reload, 4000);
+</script>
+
+</html>
