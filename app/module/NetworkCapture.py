@@ -213,7 +213,7 @@ class netCapture:
                 check_time = '{:0>2d}:00'.format(int(now_time[:2]) - 1)
 
             netCapture.all_time[check_time] = [
-                netCapture.trafficIn // config.stream_unit, netCapture.trafficOut // stream_unit]
+                netCapture.trafficIn // config.stream_unit, netCapture.trafficOut // config.stream_unit]
             if check_time == '00:00':
                 for otime in netCapture.all_time:
                     if otime != '00:00':
