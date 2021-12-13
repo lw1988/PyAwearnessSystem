@@ -14,6 +14,7 @@ from os import listdir
 from collections import OrderedDict
 import json
 import config
+from pathlib import Path
 
 # 实例化flask
 app = Flask(__name__)
@@ -103,10 +104,13 @@ def index():
     with open('./output/attack_status.log', 'r') as fp:
         attacks = json.load(fp)
     # 读取请求记录
-    with open('./output/requests_status.log', 'r') as fp:
+    if not Path('./output/requests_status.log').is_file():
         global ip_from_sort
-        requests = json.load(fp)
-        ip_from_sort = requests
+        requests = ip_from_sort 
+    else:
+        with open('./output/requests_status.log', 'r') as fp:
+            requests = json.load(fp)
+            ip_from_sort = requests
     # 图表绘制
     world_chart = WorldMapChart.world_status()
     world_id = world_chart._chart_id
